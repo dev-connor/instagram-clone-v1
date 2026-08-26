@@ -3,6 +3,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { PostsModule } from './posts/posts.module';
+import { CommentsModule } from './comments/comments.module';
+import { LikesModule } from './likes/likes.module';
+import { FollowsModule } from './follows/follows.module';
 
 @Module({
   imports: [
@@ -20,6 +26,12 @@ import { AppService } from './app.service';
         synchronize: true, // 데모/개발 전용 — 운영에서는 마이그레이션으로 대체
       }),
     }),
+    AuthModule,
+    UsersModule,
+    PostsModule,
+    CommentsModule,
+    LikesModule,
+    FollowsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

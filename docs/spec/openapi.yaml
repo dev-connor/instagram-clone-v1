@@ -1,0 +1,935 @@
+openapi: 3.0.0
+paths:
+  /:
+    get:
+      operationId: AppController_getHello
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+        - App
+  /auth/signup:
+    post:
+      operationId: AuthController_signup
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseDto'
+        '409':
+          description: username 또는 email 중복
+      summary: 회원가입
+      tags: &ref_0
+        - auth
+  /auth/login:
+    post:
+      operationId: AuthController_login
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseDto'
+        '401':
+          description: 이메일 또는 비밀번호 불일치
+      summary: 로그인 및 토큰 발급
+      tags: *ref_0
+  /users/me:
+    get:
+      operationId: UsersController_getMe
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeDto'
+      security: &ref_1
+        - bearer: []
+      summary: 내 프로필 조회
+      tags: &ref_2
+        - users
+    patch:
+      operationId: UsersController_updateMe
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeDto'
+      security: *ref_1
+      summary: 내 프로필 수정 (name/bio/profileImageUrl)
+      tags: *ref_2
+  /users/{id}:
+    get:
+      description: postCount / followerCount / followingCount / isFollowedByMe 포함
+      operationId: UsersController_getUser
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileDto'
+        '404':
+          description: 사용자를 찾을 수 없음
+      security: *ref_1
+      summary: 특정 사용자 프로필 조회
+      tags: *ref_2
+  /users/{id}/posts:
+    get:
+      operationId: UsersController_getUserPosts
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+        - name: page
+          required: false
+          in: query
+          description: 페이지 번호 (1부터 시작)
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          description: 페이지당 항목 수
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPostsDto'
+        '404':
+          description: 사용자를 찾을 수 없음
+      security: *ref_1
+      summary: 특정 사용자의 게시물 목록 (프로필 그리드)
+      tags: *ref_2
+  /posts:
+    post:
+      operationId: PostsController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponseDto'
+      security: &ref_3
+        - bearer: []
+      summary: 게시물 작성
+      tags: &ref_4
+        - posts
+  /posts/feed:
+    get:
+      description: 팔로우 중인 사용자 + 본인 게시물, 최신순 페이지네이션
+      operationId: PostsController_getFeed
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: 페이지 번호 (1부터 시작)
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          description: 페이지당 항목 수
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPostsDto'
+      security: *ref_3
+      summary: 홈 피드
+      tags: *ref_4
+  /posts/{id}:
+    get:
+      description: likeCount / commentCount / isLikedByMe 포함
+      operationId: PostsController_getOne
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponseDto'
+        '404':
+          description: 게시물을 찾을 수 없음
+      security: *ref_3
+      summary: 게시물 상세
+      tags: *ref_4
+    delete:
+      operationId: PostsController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '204':
+          description: 삭제 완료
+        '403':
+          description: 본인 게시물이 아님
+        '404':
+          description: 게시물을 찾을 수 없음
+      security: *ref_3
+      summary: 본인 게시물 삭제
+      tags: *ref_4
+  /posts/{postId}/comments:
+    post:
+      operationId: CommentsController_create
+      parameters:
+        - name: postId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCommentDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResponseDto'
+        '404':
+          description: 게시물을 찾을 수 없음
+      security: &ref_5
+        - bearer: []
+      summary: 댓글 작성
+      tags: &ref_6
+        - comments
+    get:
+      operationId: CommentsController_list
+      parameters:
+        - name: postId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+        - name: page
+          required: false
+          in: query
+          description: 페이지 번호 (1부터 시작)
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          description: 페이지당 항목 수
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCommentsDto'
+        '404':
+          description: 게시물을 찾을 수 없음
+      security: *ref_5
+      summary: 댓글 목록 (페이지네이션)
+      tags: *ref_6
+  /comments/{id}:
+    delete:
+      operationId: CommentsController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '204':
+          description: 삭제 완료
+        '403':
+          description: 본인 댓글이 아님
+        '404':
+          description: 댓글을 찾을 수 없음
+      security: *ref_5
+      summary: 본인 댓글 삭제
+      tags: *ref_6
+  /posts/{postId}/likes:
+    post:
+      description: 이미 좋아요한 상태면 멱등하게 현재 상태를 반환
+      operationId: LikesController_like
+      parameters:
+        - name: postId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeStatusDto'
+        '404':
+          description: 게시물을 찾을 수 없음
+      security: &ref_7
+        - bearer: []
+      summary: 좋아요 등록
+      tags: &ref_8
+        - likes
+    delete:
+      operationId: LikesController_unlike
+      parameters:
+        - name: postId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeStatusDto'
+        '404':
+          description: 게시물을 찾을 수 없음
+      security: *ref_7
+      summary: 좋아요 취소
+      tags: *ref_8
+  /posts/{postId}/likes/count:
+    get:
+      description: Post 상세에 포함되므로 선택적
+      operationId: LikesController_count
+      parameters:
+        - name: postId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeCountDto'
+        '404':
+          description: 게시물을 찾을 수 없음
+      security: *ref_7
+      summary: 좋아요 수 조회
+      tags: *ref_8
+  /users/{id}/follow:
+    post:
+      operationId: FollowsController_follow
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: 팔로우할 대상 사용자 id
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStatusDto'
+        '400':
+          description: 자기 자신은 팔로우할 수 없음
+        '404':
+          description: 사용자를 찾을 수 없음
+      security: &ref_9
+        - bearer: []
+      summary: 팔로우
+      tags: &ref_10
+        - follows
+    delete:
+      operationId: FollowsController_unfollow
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: 언팔로우할 대상 사용자 id
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStatusDto'
+        '404':
+          description: 사용자를 찾을 수 없음
+      security: *ref_9
+      summary: 언팔로우
+      tags: *ref_10
+  /users/{id}/followers:
+    get:
+      operationId: FollowsController_followers
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+        - name: page
+          required: false
+          in: query
+          description: 페이지 번호 (1부터 시작)
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          description: 페이지당 항목 수
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsersDto'
+        '404':
+          description: 사용자를 찾을 수 없음
+      security: *ref_9
+      summary: 팔로워 목록
+      tags: *ref_10
+  /users/{id}/following:
+    get:
+      operationId: FollowsController_following
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+        - name: page
+          required: false
+          in: query
+          description: 페이지 번호 (1부터 시작)
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          description: 페이지당 항목 수
+          schema:
+            minimum: 1
+            maximum: 50
+            default: 20
+            type: number
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsersDto'
+        '404':
+          description: 사용자를 찾을 수 없음
+      security: *ref_9
+      summary: 팔로잉 목록
+      tags: *ref_10
+info:
+  title: Instagram Clone API
+  description: ''
+  version: '1.0'
+  contact: {}
+tags: []
+servers: []
+components:
+  securitySchemes:
+    bearer:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+  schemas:
+    SignupDto:
+      type: object
+      properties:
+        username:
+          type: string
+          example: gildong
+          minLength: 3
+          maxLength: 30
+          description: 영문/숫자/밑줄/마침표만 허용
+        email:
+          type: string
+          example: gildong@example.com
+          maxLength: 255
+        password:
+          type: string
+          example: P@ssw0rd!
+          minLength: 8
+          maxLength: 72
+        name:
+          type: string
+          example: 홍길동
+          maxLength: 50
+      required:
+        - username
+        - email
+        - password
+    MeDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          example: gildong
+        email:
+          type: string
+          example: gildong@example.com
+        name:
+          type: object
+          example: 홍길동
+          nullable: true
+        bio:
+          type: object
+          example: 안녕하세요 :)
+          nullable: true
+        profileImageUrl:
+          type: object
+          example: https://cdn.example.com/avatars/gildong.jpg
+          nullable: true
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - username
+        - email
+        - name
+        - bio
+        - profileImageUrl
+        - createdAt
+        - updatedAt
+    AuthResponseDto:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: 'JWT 액세스 토큰 (Authorization: Bearer <token>)'
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/MeDto'
+      required:
+        - accessToken
+        - user
+    LoginDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: gildong@example.com
+        password:
+          type: string
+          example: P@ssw0rd!
+      required:
+        - email
+        - password
+    UpdateProfileDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 홍길동
+          maxLength: 50
+        bio:
+          type: string
+          example: 안녕하세요 :)
+          maxLength: 150
+        profileImageUrl:
+          type: string
+          example: https://cdn.example.com/avatars/gildong.jpg
+          maxLength: 500
+    UserProfileDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          example: gildong
+        name:
+          type: object
+          example: 홍길동
+          nullable: true
+        bio:
+          type: object
+          example: 안녕하세요 :)
+          nullable: true
+        profileImageUrl:
+          type: object
+          example: https://cdn.example.com/avatars/gildong.jpg
+          nullable: true
+        postCount:
+          type: number
+          description: 작성한 게시물 수
+          example: 42
+        followerCount:
+          type: number
+          description: 팔로워 수
+          example: 128
+        followingCount:
+          type: number
+          description: 팔로잉 수
+          example: 87
+        isFollowedByMe:
+          type: boolean
+          description: 요청한 본인이 이 사용자를 팔로우 중인지 여부
+          example: false
+      required:
+        - id
+        - username
+        - name
+        - bio
+        - profileImageUrl
+        - postCount
+        - followerCount
+        - followingCount
+        - isFollowedByMe
+    UserSummaryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          example: gildong
+        name:
+          type: object
+          example: 홍길동
+          nullable: true
+        profileImageUrl:
+          type: object
+          example: https://cdn.example.com/avatars/gildong.jpg
+          nullable: true
+      required:
+        - id
+        - username
+        - name
+        - profileImageUrl
+    PostResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        author:
+          $ref: '#/components/schemas/UserSummaryDto'
+        imageUrl:
+          type: string
+          example: https://cdn.example.com/posts/abc.jpg
+        caption:
+          type: object
+          example: 오늘의 훈련 🏋️
+          nullable: true
+        location:
+          type: object
+          example: 평창국민체육관
+          nullable: true
+        likeCount:
+          type: number
+          description: 좋아요 수
+          example: 24
+        commentCount:
+          type: number
+          description: 댓글 수
+          example: 3
+        isLikedByMe:
+          type: boolean
+          description: 요청한 본인이 이 게시물에 좋아요를 눌렀는지 여부
+          example: false
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - author
+        - imageUrl
+        - caption
+        - location
+        - likeCount
+        - commentCount
+        - isLikedByMe
+        - createdAt
+        - updatedAt
+    PageMetaDto:
+      type: object
+      properties:
+        page:
+          type: number
+          description: 현재 페이지 번호
+          example: 1
+        limit:
+          type: number
+          description: 페이지당 항목 수
+          example: 20
+        totalItems:
+          type: number
+          description: 전체 항목 수
+          example: 137
+        totalPages:
+          type: number
+          description: 전체 페이지 수
+          example: 7
+        hasNextPage:
+          type: boolean
+          description: 다음 페이지 존재 여부
+          example: true
+      required:
+        - page
+        - limit
+        - totalItems
+        - totalPages
+        - hasNextPage
+    PaginatedPostsDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostResponseDto'
+        meta:
+          $ref: '#/components/schemas/PageMetaDto'
+      required:
+        - items
+        - meta
+    CreatePostDto:
+      type: object
+      properties:
+        imageUrl:
+          type: string
+          description: 게시물 이미지 URL
+          example: https://cdn.example.com/posts/abc.jpg
+          maxLength: 500
+        caption:
+          type: string
+          example: 오늘의 훈련 🏋️
+          maxLength: 2200
+        location:
+          type: string
+          example: 평창국민체육관
+          maxLength: 100
+      required:
+        - imageUrl
+    CreateCommentDto:
+      type: object
+      properties:
+        content:
+          type: string
+          example: 멋진 사진이네요!
+          maxLength: 2200
+      required:
+        - content
+    CommentResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        postId:
+          type: string
+          format: uuid
+        author:
+          $ref: '#/components/schemas/UserSummaryDto'
+        content:
+          type: string
+          example: 멋진 사진이네요!
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - postId
+        - author
+        - content
+        - createdAt
+        - updatedAt
+    PaginatedCommentsDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentResponseDto'
+        meta:
+          $ref: '#/components/schemas/PageMetaDto'
+      required:
+        - items
+        - meta
+    LikeStatusDto:
+      type: object
+      properties:
+        postId:
+          type: string
+          format: uuid
+        isLikedByMe:
+          type: boolean
+          description: 본인의 좋아요 여부
+          example: true
+        likeCount:
+          type: number
+          description: 해당 게시물의 총 좋아요 수
+          example: 25
+      required:
+        - postId
+        - isLikedByMe
+        - likeCount
+    LikeCountDto:
+      type: object
+      properties:
+        postId:
+          type: string
+          format: uuid
+        likeCount:
+          type: number
+          description: 해당 게시물의 총 좋아요 수
+          example: 25
+      required:
+        - postId
+        - likeCount
+    FollowStatusDto:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: 대상 사용자 id
+          format: uuid
+        isFollowedByMe:
+          type: boolean
+          description: 본인이 이 사용자를 팔로우 중인지 여부
+          example: true
+        followerCount:
+          type: number
+          description: 대상 사용자의 팔로워 수
+          example: 129
+      required:
+        - userId
+        - isFollowedByMe
+        - followerCount
+    PaginatedUsersDto:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserSummaryDto'
+        meta:
+          $ref: '#/components/schemas/PageMetaDto'
+      required:
+        - items
+        - meta
