@@ -16,3 +16,4 @@ fe/build/
 fe/.pub-cache/
 fe/.pub/
 fe/*.iml
+.claude/settings.local.json
