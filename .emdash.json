@@ -1,0 +1,8 @@
+{
+  "preservePatterns": ["be/.env", "fe/.env"],
+  "scripts": {
+    "be:dev": "cd be && npm run start:dev",
+    "be:spec:export": "cd be && npm run spec:export",
+    "fe:dev": "cd fe && flutter run -d chrome"
+  }
+}

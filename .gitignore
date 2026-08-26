@@ -1,0 +1,18 @@
+# common
+.DS_Store
+*.log
+
+# be (NestJS)
+be/node_modules/
+be/dist/
+be/coverage/
+be/.env
+
+# fe (Flutter) — flutter create 실행 후에도 적용됨
+fe/.dart_tool/
+fe/.flutter-plugins
+fe/.flutter-plugins-dependencies
+fe/build/
+fe/.pub-cache/
+fe/.pub/
+fe/*.iml
