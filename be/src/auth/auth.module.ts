@@ -20,7 +20,11 @@ import { JwtStrategy } from './jwt.strategy';
       useFactory: (config: ConfigService) => ({
         secret: config.get<string>('JWT_SECRET', 'dev-secret-change-me'),
         signOptions: {
-          expiresIn: config.get<string>('JWT_EXPIRES_IN', '7d'),
+          // @nestjs/jwt 는 ms 의 StringValue 리터럴 타입을 요구하므로 런타임 문자열을 캐스팅
+          expiresIn: config.get<string>(
+            'JWT_EXPIRES_IN',
+            '7d',
+          ) as unknown as number,
         },
       }),
     }),

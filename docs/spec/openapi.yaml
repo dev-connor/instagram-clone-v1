@@ -268,12 +268,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommentResponseDto'
+        '401': &ref_5
+          description: 인증 토큰이 없거나 유효하지 않음
         '404':
           description: 게시물을 찾을 수 없음
-      security: &ref_5
+      security: &ref_6
         - bearer: []
       summary: 댓글 작성
-      tags: &ref_6
+      tags: &ref_7
         - comments
     get:
       operationId: CommentsController_list
@@ -308,11 +310,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedCommentsDto'
+        '401': *ref_5
         '404':
           description: 게시물을 찾을 수 없음
-      security: *ref_5
+      security: *ref_6
       summary: 댓글 목록 (페이지네이션)
-      tags: *ref_6
+      tags: *ref_7
   /comments/{id}:
     delete:
       operationId: CommentsController_remove
@@ -326,13 +329,14 @@ paths:
       responses:
         '204':
           description: 삭제 완료
+        '401': *ref_5
         '403':
           description: 본인 댓글이 아님
         '404':
           description: 댓글을 찾을 수 없음
-      security: *ref_5
+      security: *ref_6
       summary: 본인 댓글 삭제
-      tags: *ref_6
+      tags: *ref_7
   /posts/{postId}/likes:
     post:
       description: 이미 좋아요한 상태면 멱등하게 현재 상태를 반환
@@ -353,10 +357,10 @@ paths:
                 $ref: '#/components/schemas/LikeStatusDto'
         '404':
           description: 게시물을 찾을 수 없음
-      security: &ref_7
+      security: &ref_8
         - bearer: []
       summary: 좋아요 등록
-      tags: &ref_8
+      tags: &ref_9
         - likes
     delete:
       operationId: LikesController_unlike
@@ -376,9 +380,9 @@ paths:
                 $ref: '#/components/schemas/LikeStatusDto'
         '404':
           description: 게시물을 찾을 수 없음
-      security: *ref_7
+      security: *ref_8
       summary: 좋아요 취소
-      tags: *ref_8
+      tags: *ref_9
   /posts/{postId}/likes/count:
     get:
       description: Post 상세에 포함되므로 선택적
@@ -399,9 +403,9 @@ paths:
                 $ref: '#/components/schemas/LikeCountDto'
         '404':
           description: 게시물을 찾을 수 없음
-      security: *ref_7
+      security: *ref_8
       summary: 좋아요 수 조회
-      tags: *ref_8
+      tags: *ref_9
   /users/{id}/follow:
     post:
       operationId: FollowsController_follow
@@ -424,10 +428,10 @@ paths:
           description: 자기 자신은 팔로우할 수 없음
         '404':
           description: 사용자를 찾을 수 없음
-      security: &ref_9
+      security: &ref_10
         - bearer: []
       summary: 팔로우
-      tags: &ref_10
+      tags: &ref_11
         - follows
     delete:
       operationId: FollowsController_unfollow
@@ -448,9 +452,9 @@ paths:
                 $ref: '#/components/schemas/FollowStatusDto'
         '404':
           description: 사용자를 찾을 수 없음
-      security: *ref_9
+      security: *ref_10
       summary: 언팔로우
-      tags: *ref_10
+      tags: *ref_11
   /users/{id}/followers:
     get:
       operationId: FollowsController_followers
@@ -487,9 +491,9 @@ paths:
                 $ref: '#/components/schemas/PaginatedUsersDto'
         '404':
           description: 사용자를 찾을 수 없음
-      security: *ref_9
+      security: *ref_10
       summary: 팔로워 목록
-      tags: *ref_10
+      tags: *ref_11
   /users/{id}/following:
     get:
       operationId: FollowsController_following
@@ -526,9 +530,9 @@ paths:
                 $ref: '#/components/schemas/PaginatedUsersDto'
         '404':
           description: 사용자를 찾을 수 없음
-      security: *ref_9
+      security: *ref_10
       summary: 팔로잉 목록
-      tags: *ref_10
+      tags: *ref_11
 info:
   title: Instagram Clone API
   description: ''
